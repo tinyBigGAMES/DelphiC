@@ -1,2 +1,2 @@
 # DelphiC
-Embedded runtime C compilation and execution for Delphi applications.
+Runtime C compilation for Delphi

@@ -41,7 +41,7 @@
  ------------------------------------------------------------------------------
 
  This library uses the following open-source libraries:
-   * tinycc  - https://github.com/kyx0r/tinycc
+   * tinycc - https://github.com/TinyCC/tinycc
 
 ===============================================================================}
 
@@ -337,14 +337,51 @@ type
     procedure ClearErrors();
 
     /// <summary>
-    ///   Resets the compiler to initial state, destroying and recreating the TCC context.
+    ///   Resets the compiler to initial state while preserving callback registrations.
     /// </summary>
     /// <remarks>
-    ///   This allows reuse of the same TDelphiC instance for multiple compilation sessions.
-    ///   All previous configuration, compilation state, and symbols are lost.
+    ///   <para>
+    ///     Destroys and recreates the TCC compilation context, allowing reuse of the
+    ///     same TDelphiC instance for multiple compilation sessions.
+    ///   </para>
+    ///   <para>
+    ///     All previous configuration, compilation state, and symbols are lost.
+    ///   </para>
+    ///   <para>
+    ///     <b>Preserved:</b> Print callback registration (set via SetPrintCallback)
+    ///   </para>
+    ///   <para>
+    ///     <b>Cleared:</b> Output type, compiler options, include/library paths,
+    ///     defined symbols, compiled code, and workflow state
+    ///   </para>
+    ///   <para>
+    ///     Use <see cref="Clear"/> if you also want to remove callback registrations.
+    ///   </para>
     /// </remarks>
     /// <exception cref="Exception">Raised if TCC reinitialization fails</exception>
     procedure Reset();
+
+    /// <summary>
+    ///   Completely resets the compiler to pristine initial state, clearing all
+    ///   configuration including callback registrations.
+    /// </summary>
+    /// <remarks>
+    ///   <para>
+    ///     Performs the same reset as <see cref="Reset"/> but also clears all
+    ///     callback registrations, returning the instance to a completely clean state
+    ///     as if freshly created.
+    ///   </para>
+    ///   <para>
+    ///     <b>Cleared:</b> Print callback registration, output type, compiler options,
+    ///     include/library paths, defined symbols, compiled code, and workflow state
+    ///   </para>
+    ///   <para>
+    ///     Use this when you want a completely fresh start without any residual
+    ///     configuration. Use <see cref="Reset"/> if you want to keep your callbacks.
+    ///   </para>
+    /// </remarks>
+    /// <exception cref="Exception">Raised if TCC reinitialization fails</exception>
+    procedure Clear();
 
     /// <summary>
     ///   Sets a callback function to receive TCC error and warning messages.
@@ -854,9 +891,6 @@ begin
   begin
     tcc_delete(FState);
     FState := nil;
-
-    FPrintCallback.Handler := nil;
-    FPrintCallback.UserData := nil;
   end;
 end;
 
@@ -912,6 +946,16 @@ begin
   FreeState();
   NewState();
 end;
+
+procedure TDelphiC.Clear();
+begin
+  Reset();
+
+  // Reset callbacks
+  FPrintCallback.Handler := nil;
+  FPrintCallback.UserData := nil;
+end;
+
 
 function TDelphiC.AddIncludePath(const APathName: string): Boolean;
 begin
@@ -1081,14 +1125,14 @@ var
   LCode: string;
 begin
   // Must set output type first, and not be past compilation stage
-  if not FOutputSet or (FWorkflowState > wsConfigured) then
+  if not FOutputSet or (FWorkflowState <> wsConfigured) and (FWorkflowState <> wsCompiled) then
   begin
     Result := False;
     Exit;
   end;
 
   LCode := '#line 1 "' + AFilename + '"' + #13#10 + ACode;
-  Result := tcc_compile_string(FState, AsUTF8(LCode)) >= 0;
+  Result := Boolean(tcc_compile_string(FState, AsUTF8(LCode)) >= 0);
   if Result then
     FWorkflowState := wsCompiled;
 end;
@@ -1106,7 +1150,7 @@ end;
 function TDelphiC.AddFile(const AFilename: string): Boolean;
 begin
   // Must set output type first, and not be past compilation stage
-  if not FOutputSet or (FWorkflowState > wsConfigured) then
+  if not FOutputSet or (FWorkflowState <> wsConfigured) and (FWorkflowState <> wsCompiled) then
   begin
     Result := False;
     Exit;
@@ -1565,7 +1609,7 @@ begin
   Result := False;
   if LTCCDllHandle <> 0 then Exit(True);
 
-  LTCCDllHandle := LoadLibrary('tcc.dll');
+  LTCCDllHandle := LoadLibrary('libtcc.dll');
   if LTCCDllHandle = 0 then
   begin
     AError := 'Failed to load TCC DLL';

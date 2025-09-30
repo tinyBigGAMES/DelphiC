@@ -41,7 +41,7 @@
  ------------------------------------------------------------------------------
 
  This library uses the following open-source libraries:
-   * tinycc  - https://github.com/kyx0r/tinycc
+   * tinycc - https://github.com/TinyCC/tinycc
 
 ===============================================================================}
 

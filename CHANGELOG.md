@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### Changed
+- **Update README.md** (2025-10-01 – jarroddavis68)
+
 - **Merge branch 'main' of https://github.com/tinyBigGAMES/DelphiC** (2025-09-29 – jarroddavis68)
 
 - **Repo Update** (2025-09-29 – jarroddavis68)

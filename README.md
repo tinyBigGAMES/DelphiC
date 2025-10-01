@@ -338,7 +338,7 @@ See [LICENSE](https://github.com/tinyBigGAMES/DelphiC#BSD-3-Clause-1-ov-file) fo
 ### 📦 Third-Party Components
 
 This library uses:
-- **TCC (Tiny C Compiler)** - https://github.com/kyx0r/tinycc
+- **TCC (Tiny C Compiler)** - https://github.com/TinyCC/tinycc
 
 ## 💬 Support
 
